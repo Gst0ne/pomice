@@ -1,0 +1,112 @@
+from typing import Optional
+
+from discord.ext import commands
+
+from .enums import SearchType
+
+
+class Track:
+    """The base track object. Returns critical track information needed for parsing by Lavalink.
+       You can also pass in commands.Context to get a discord.py Context object in your track.
+    """
+
+    def __init__(
+        self,
+        *,
+        track_id: str,
+        info: dict,
+        ctx: Optional[commands.Context] = None,
+        spotify: bool = False,
+        search_type: SearchType = SearchType.ytsearch
+    ):
+        self.track_id = track_id
+        self.info = info
+        self.spotify = spotify
+
+        self.original: Optional[Track] = None if self.spotify else self
+        self._search_type = search_type
+
+        self.title = info.get("title")
+        self.author = info.get("author")
+        self.thumbnail = info.get("thumbnail")
+        self.length = info.get("length")
+        self.ctx = ctx
+        self.requester = self.ctx.author if ctx else None
+        self.identifier = info.get("identifier")
+        self.uri = info.get("uri")
+        self.is_stream = info.get("isStream")
+        self.is_seekable = info.get("isSeekable")
+        self.position = info.get("position")
+
+    def __eq__(self, other):
+        if not isinstance(other, Track):
+            return False
+
+        if self.ctx and other.ctx:
+            return other.track_id == self.track_id and other.ctx.message.id == self.ctx.message.id
+
+        return other.track_id == self.track_id
+
+    def __str__(self):
+        return self.title
+
+    def __repr__(self):
+        return f"<Pomice.track title={self.title!r} uri=<{self.uri!r}> length={self.length}>"
+
+
+class Playlist:
+    """The base playlist object.
+       Returns critical playlist information needed for parsing by Lavalink.
+       You can also pass in commands.Context to get a discord.py Context object in your tracks.
+    """
+
+    def __init__(
+        self,
+        *,
+        playlist_info: dict,
+        tracks: list,
+        ctx: Optional[commands.Context] = None,
+        spotify: bool = False,
+        search_type: SearchType = SearchType.ytsearch,
+        thumbnail: Optional[str] = None,
+        uri: Optional[str] = None,
+    ):
+        self.playlist_info = playlist_info
+        self.tracks_raw = tracks
+        self.spotify = spotify
+        self._search_type = search_type
+
+        self.name = playlist_info.get("name")
+        if (index := playlist_info.get("selectedTrack")) == -1:
+            self.selected_track = 0
+        else:
+            self.selected_track = index
+
+        self._thumbnail = thumbnail
+        self._uri = uri
+
+        if self.spotify:
+            self.tracks = tracks
+        else:
+            self.tracks = [
+                Track(track_id=track["track"], info=track["info"], ctx=ctx, search_type=search_type)
+                for track in self.tracks_raw
+            ]
+
+        self.track_count = len(self.tracks)
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return f"<Pomice.playlist name={self.name!r} track_count={len(self.tracks)}>"
+
+    @property
+    def uri(self) -> Optional[str]:
+        """Spotify album/playlist URI, or None if not a Spotify object."""
+        return self._uri
+
+    @property
+    def thumbnail(self) -> Optional[str]:
+        """Spotify album/playlist thumbnail, or None if not a Spotify object."""
+        return self._thumbnail
