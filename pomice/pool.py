@@ -209,7 +209,7 @@ class Node:
 
         while True:
             msg = await self._websocket.receive()
-            if msg.type in self._closed_msgtypes:
+            if msg.type == WSMsgType.CLOSE:
                 retry = backoff.delay()
                 await asyncio.sleep(retry)
 
