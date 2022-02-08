@@ -29,10 +29,12 @@ from .exceptions import (
     TrackLoadError
 )
 from .objects import Playlist, Track
-from .utils import ClientType, ExponentialBackoff, NodeStats, Ping
+from .utils import ClientType, NodeStats, Ping
+from .backoff import Backoff
 
 if TYPE_CHECKING:
     from .player import Player
+
 
 SPOTIFY_URL_REGEX = re.compile(
     r"https?://open.spotify.com/(?P<type>album|artist|playlist|track)/(?P<id>[a-zA-Z0-9]+)"
@@ -205,12 +207,12 @@ class Node:
                 return
 
     async def _listen(self):
-        backoff = ExponentialBackoff(base=7)
+        backoff = Backoff(base=1, maximum_time=60, maximum_tries=None)
 
         while True:
             msg = await self._websocket.receive()
-            if msg.type == WSMsgType.CLOSE:
-                retry = backoff.delay()
+            if msg.type in self._closed_msgtypes:
+                retry = backoff.calculate()
                 await asyncio.sleep(retry)
 
                 if not self.is_connected:
