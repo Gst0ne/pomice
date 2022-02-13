@@ -1,7 +1,9 @@
 import time
 from typing import (
     Any,
+    List,
     Dict,
+    Union,
     Optional
 )
 
@@ -20,7 +22,7 @@ from .enums import SearchType
 from .events import PomiceEvent, TrackEndEvent, TrackStartEvent
 from .exceptions import TrackInvalidPosition
 from .filters import Filter, Timescale
-from .objects import Track
+from .objects import Track, Playlist
 from .pool import Node, NodePool
 from .utils import ClientType
 
@@ -53,10 +55,12 @@ class Player(VoiceProtocol):
 
         self._node = node or NodePool.get_node()
         self._current: Track = None
-        self._filter: Filter = None
         self._volume = 100
         self._paused = False
         self._is_connected = False
+
+        self._filters: List[Filter] = []
+        self._filter_payload: Dict[str, Any] = {}
 
         self._position = 0
         self._last_position = 0
@@ -84,8 +88,9 @@ class Player(VoiceProtocol):
 
         difference = (time.time() * 1000) - self._last_update
         
-        if self._filter and isinstance(self._filter, Timescale):
-            difference = difference * self._filter.speed * self._filter.rate
+        if self._filters and [f for f in self._filters if isinstance(f, Timescale)]:
+            timescale = [f for f in self._filters if isinstance(f, Timescale)][0]
+            difference = difference * timescale.speed * timescale.rate
 
         position = self._last_position + difference
 
@@ -130,9 +135,9 @@ class Player(VoiceProtocol):
         return self._volume
 
     @property
-    def filter(self) -> Filter:
+    def filters(self) -> List[Filter]:
         """Property which returns the currently applied filter, if one is applied"""
-        return self._filter
+        return self._filters
 
     @property
     def bot(self) -> ClientType:
@@ -145,6 +150,12 @@ class Player(VoiceProtocol):
            A player is considered dead if it has been destroyed and removed from stored players.
         """
         return self._guild.id not in self._node._players
+
+    async def _set_filter(self):
+        await self._node.send(op="filters", guildId=str(self.guild.id), **self._filter_payload)
+        position = self.position if self._current else None
+        if position:
+            await self._node.send(op="seek", guildId=str(self.guild.id), position=position)
 
     async def _update_state(self, data: dict):
         state: dict = data.get("state")
@@ -200,7 +211,7 @@ class Player(VoiceProtocol):
         ctx: Optional[commands.Context] = None,
         search_type: SearchType = SearchType.ytsearch,
         local: bool = False
-    ):
+    ) -> Union[Track, Playlist]:
         """Fetches tracks from the node's REST api to parse into Lavalink.
 
         If you passed in Spotify API credentials when you created the node,
@@ -212,17 +223,18 @@ class Player(VoiceProtocol):
         """
         return await self._node.get_tracks(query, ctx=ctx, search_type=search_type, local=local)
 
-    async def connect(self, *, timeout: float, reconnect: bool):
+    async def connect(self, *, timeout: float, reconnect: bool) -> None:
+        """Makes the bot join a voice channel"""
         await self.guild.change_voice_state(channel=self.channel)
         self._node._players[self.guild.id] = self
         self._is_connected = True
 
-    async def stop(self):
+    async def stop(self) -> None:
         """Stops the currently playing track."""
         self._current = None
         await self._node.send(op="stop", guildId=str(self.guild.id))
 
-    async def disconnect(self, *, force: bool = False   ):
+    async def disconnect(self, *, force: bool = False) -> None:
         """Disconnects the player from voice."""
         try:
             await self.guild.change_voice_state(channel=None)
@@ -231,7 +243,7 @@ class Player(VoiceProtocol):
             self._is_connected = False
             self.channel = None
 
-    async def destroy(self):
+    async def destroy(self) -> None:
         """Disconnects and destroys the player, and runs internal cleanup."""
         try:
             await self.disconnect()
@@ -304,15 +316,16 @@ class Player(VoiceProtocol):
         self._volume = volume
         return self._volume
 
-    async def set_filter(self, filter: Filter) -> Filter:
-        """Sets a filter of the player. Takes a pomice.Filter object.
-           This will only work if you are using the development version of Lavalink.
-        """
-        position = self.position if self._current else None
-        await self._node.send(op="filters", guildId=str(self.guild.id), **filter.payload)
-        if position: 
-            await self._node.send(op="seek", guildId=str(self.guild.id), position=position)
-        self._filter = filter
+    async def add_filter(self, filter: Filter) -> List[Filter]:
+        """Adds a filter to the player. Takes a pomice.Filter object."""
+        self._filters += filter
+        self._filter_payload.update(filter.payload)
+        self._set_filter()
+        return self._filters
+
+    async def remove_filter(self, filter: Filter) -> Optional[Filter]
+        """Removes an existing filter from the player"""
+        filter = self._filter_payload.pop(list(filter.payload.keys())[0], None)
         return filter
 
     async def reset_filter(self):
