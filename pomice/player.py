@@ -339,4 +339,4 @@ class Player(VoiceProtocol):
         """Resets the current filter of the player."""
         self._filters = []
         self._filter_payload = {}
-        self._set_filter()
+        await self._set_filter()
