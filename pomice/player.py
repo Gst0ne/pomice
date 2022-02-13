@@ -229,6 +229,9 @@ class Player(VoiceProtocol):
         self._node._players[self.guild.id] = self
         self._is_connected = True
 
+    async def move_to(self, channel: Connectable) -> Player:
+        await self.guild.change_voice_state(channel, self_mute=False, self_deaf=False)
+
     async def stop(self) -> None:
         """Stops the currently playing track."""
         self._current = None
@@ -318,17 +321,22 @@ class Player(VoiceProtocol):
 
     async def add_filter(self, filter: Filter) -> List[Filter]:
         """Adds a filter to the player. Takes a pomice.Filter object."""
-        self._filters += filter
+        self._filters.append(filter)
         self._filter_payload.update(filter.payload)
-        self._set_filter()
+        await self._set_filter()
         return self._filters
 
-    async def remove_filter(self, filter: Filter) -> Optional[Filter]
+    async def remove_filter(self, filter: Filter) -> Optional[Filter]:
         """Removes an existing filter from the player"""
+        for f in self._filters:
+            if isinstance(f, type(Filter)) or isinstance(filter, type) and isinstance(f, Filter):
+                self._filters.pop(f, None)
         filter = self._filter_payload.pop(list(filter.payload.keys())[0], None)
+        await self._set_filter()
         return filter
 
-    async def reset_filter(self):
+    async def reset_filter(self) -> None:
         """Resets the current filter of the player."""
-        await self.set_filter(Filter.none())
-        self._filter = None
+        self._filters = []
+        self._filter_payload = {}
+        self._set_filter()
