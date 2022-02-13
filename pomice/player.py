@@ -6,6 +6,7 @@ from typing import (
     Union,
     Optional
 )
+from contextlib import suppress
 
 from discord import (
     Guild,
@@ -330,7 +331,8 @@ class Player(VoiceProtocol):
         """Removes an existing filter from the player"""
         for f in self._filters:
             if isinstance(f, type(Filter)) or isinstance(filter, type) and isinstance(f, Filter):
-                self._filters.pop(f, None)
+                with suppress(KeyError):
+                    self._filters.pop(f)
         filter = self._filter_payload.pop(list(filter.payload.keys())[0], None)
         await self._set_filter()
         return filter
