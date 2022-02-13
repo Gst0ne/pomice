@@ -230,8 +230,8 @@ class Player(VoiceProtocol):
         self._node._players[self.guild.id] = self
         self._is_connected = True
 
-    async def move_to(self, channel: Connectable) -> None:
-        await self.guild.change_voice_state(channel, self_mute=False, self_deaf=False)
+    async def move_to(self, channel: Connectable, *, self_mute=False, self_deaf=False) -> None:
+        await self.guild.change_voice_state(channel, self_mute=self_mute, self_deaf=self_deaf)
 
     async def stop(self) -> None:
         """Stops the currently playing track."""
