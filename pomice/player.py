@@ -333,7 +333,7 @@ class Player(VoiceProtocol):
         for f in self._filters:
             if isinstance(f, type(Filter)) or isinstance(filter, type) and isinstance(f, Filter):
                 with suppress(KeyError):
-                    self._filters.pop(f)
+                    self._filters.remove(f)
         filter = self._filter_payload.pop(list(filter.payload.keys())[0], None)
         await self._set_filter()
         return filter
