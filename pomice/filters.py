@@ -12,9 +12,6 @@ class Filter:
     def __init__(self, payload=None):
         self.payload = payload
 
-    @classmethod
-    def none(cls):
-        return cls({})
 
 class Equalizer(Filter):
     """
