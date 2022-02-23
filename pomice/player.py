@@ -323,6 +323,9 @@ class Player(VoiceProtocol):
 
     async def add_filter(self, filter: Filter) -> List[Filter]:
         """Adds a filter to the player. Takes a pomice.Filter object."""
+        for f in self.filters:
+            if type(f) == type(filter):
+                self.filters.remove(f)
         self._filters.append(filter)
         self._filter_payload.update(filter.payload)
         await self._set_filter()
@@ -332,8 +335,7 @@ class Player(VoiceProtocol):
         """Removes an existing filter from the player"""
         for f in self._filters:
             if isinstance(f, type(filter)) or isinstance(filter, type) and isinstance(f, Filter):
-                with suppress(KeyError):
-                    self._filters.remove(f)
+                self.filters.remove(f)
         filter = self._filter_payload.pop(list(filter.payload.keys())[0], None)
         await self._set_filter()
         return filter
