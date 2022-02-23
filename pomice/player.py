@@ -334,7 +334,7 @@ class Player(VoiceProtocol):
     async def remove_filter(self, filter: Filter) -> Optional[Filter]:
         """Removes an existing filter from the player"""
         for f in self._filters:
-            if isinstance(f, type(filter)) or isinstance(filter, type) and isinstance(f, Filter):
+            if isinstance(f, type(filter)):
                 self.filters.remove(f)
         filter = self._filter_payload.pop(list(filter.payload.keys())[0], None)
         await self._set_filter()
