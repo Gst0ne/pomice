@@ -6,7 +6,6 @@ from typing import (
     Union,
     Optional
 )
-from contextlib import suppress
 
 from discord import (
     Guild,
