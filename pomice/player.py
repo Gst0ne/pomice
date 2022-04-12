@@ -1,4 +1,5 @@
 import time
+import inspect
 from typing import (
     Any,
     List,
@@ -21,7 +22,7 @@ from . import events
 from .enums import SearchType
 from .events import PomiceEvent, TrackEndEvent, TrackStartEvent
 from .exceptions import TrackInvalidPosition
-from .filters import Filter, Timescale
+from .filters import Filter, Timescale, Equalizer
 from .objects import Track, Playlist
 from .pool import Node, NodePool
 from .utils import ClientType
@@ -328,8 +329,11 @@ class Player(VoiceProtocol):
 
     async def remove_filter(self, filter: Filter) -> Optional[Filter]:
         """Removes an existing filter from the player"""
-        if isinstance(filter, type):
-            filter = filter()
+        if isinstance(filter, type) or inspect.ismethod(filter):
+            if Equalizer in (filter, getattr(filter, "__self__", None)):
+                filter = Equalizer.flat()
+            else:
+                filter = filter()
         for f in self._filters:
             if isinstance(f, filter.__class__):
                 self.filters.remove(f)
