@@ -164,14 +164,12 @@ class Player(VoiceProtocol):
         self._last_position = state.get("position")
 
     async def _dispatch_voice_update(self, voice_data: Dict[str, Any]):
-        if {"sessionId", "event"} != self._voice_state.keys():
-            return
-
-        await self._node.send(
+        if {"sessionId", "event"} == self._voice_state.keys():
+            await self._node.send(
             op="voiceUpdate",
             guildId=str(self.guild.id),
             **voice_data
-        )
+            )
 
     async def on_voice_server_update(self, data: dict):
         self._voice_state.update({"event": data})
@@ -187,10 +185,8 @@ class Player(VoiceProtocol):
 
         self.channel = self.guild.get_channel(int(channel_id))
 
-        if not data.get("token"):
-            return
-
-        await self._dispatch_voice_update({**self._voice_state, "event": data})
+        if data.get("token"):
+            await self._dispatch_voice_update({**self._voice_state, "event": data})
 
     async def _dispatch_event(self, data: dict):
         event_type = data.get("type")
@@ -332,8 +328,10 @@ class Player(VoiceProtocol):
 
     async def remove_filter(self, filter: Filter) -> Optional[Filter]:
         """Removes an existing filter from the player"""
+        if isinstance(filter, type):
+            filter = filter()
         for f in self._filters:
-            if isinstance(f, type(filter)):
+            if isinstance(f, filter.__class__):
                 self.filters.remove(f)
         filter = self._filter_payload.pop(list(filter.payload.keys())[0], None)
         await self._set_filter()
