@@ -421,7 +421,7 @@ class Node:
                         "isStream": False,
                         "position": 0,
                         "sourceName": "http",
-                        "title": discord_url.group("file"),
+                        "title": discord_url.group("file") if (title := info.get("title")) == "Unknown title" else title,
                         "uri": info.get("uri"),
                     }
                 )
