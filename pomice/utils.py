@@ -5,7 +5,7 @@ from typing import Union
 from timeit import default_timer as timer
 from itertools import zip_longest
 
-from discord import AutoShardedClient, Client
+from discord import AutoShardedClient, Client, VoiceChannel, StageChannel
 from discord.ext.commands import AutoShardedBot, Bot
 
 __all__ = [
@@ -16,6 +16,8 @@ __all__ = [
 ]
 
 ClientType = Union[AutoShardedBot, AutoShardedClient, Bot, Client]
+
+GuildVoiceChannel = Union[VoiceChannel, StageChannel]
 
 
 class ExponentialBackoff:
