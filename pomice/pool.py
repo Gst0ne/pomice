@@ -416,7 +416,7 @@ class Node:
                     info={
                         "identifier": info.get("identifier"),
                         "isSeekable": True,
-                        "author": "Unknown",
+                        "author": "Unknown" if (author := info.get("author")) == "Unknown artist" else author,
                         "length": info.get("length"),
                         "isStream": False,
                         "position": 0,
