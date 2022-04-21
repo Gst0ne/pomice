@@ -12,10 +12,6 @@ from discord import (
     Guild,
     VoiceProtocol
 )
-
-from discord.abc import (
-    Connectable
-)
 from discord.ext import commands
 
 from . import events
@@ -25,7 +21,7 @@ from .exceptions import TrackInvalidPosition
 from .filters import Filter, Timescale, Equalizer
 from .objects import Track, Playlist
 from .pool import Node, NodePool
-from .utils import ClientType
+from .utils import ClientType, GuildVoiceChannel
 
 
 class Player(VoiceProtocol):
@@ -36,16 +32,16 @@ class Player(VoiceProtocol):
        ```
     """
 
-    def __call__(self, client: ClientType, channel: Connectable):
+    def __call__(self, client: ClientType, channel: GuildVoiceChannel):
         self.client: ClientType = client
-        self.channel: Connectable = channel
+        self.channel: GuildVoiceChannel = channel
 
         return self
 
     def __init__(
         self, 
         client: ClientType = None, 
-        channel: Connectable = None, 
+        channel: GuildVoiceChannel = None, 
         *, 
         node: Node = None
     ):
@@ -220,13 +216,13 @@ class Player(VoiceProtocol):
         """
         return await self._node.get_tracks(query, ctx=ctx, search_type=search_type, local=local)
 
-    async def connect(self, *, timeout: float, reconnect: bool) -> None:
+    async def connect(self, *, timeout: float, reconnect: bool, self_mute=False, self_deaf=False) -> None:
         """Makes the bot join a voice channel"""
-        await self.guild.change_voice_state(channel=self.channel)
+        await self.guild.change_voice_state(channel=self.channel, self_mute=self_mute, self_deaf=self_deaf)
         self._node._players[self.guild.id] = self
         self._is_connected = True
 
-    async def move_to(self, channel: Connectable, *, self_mute=False, self_deaf=False) -> None:
+    async def move_to(self, channel: GuildVoiceChannel, *, self_mute=False, self_deaf=False) -> None:
         """Moves the player to another channel"""
         await self.guild.change_voice_state(channel=channel, self_mute=self_mute, self_deaf=self_deaf)
 
