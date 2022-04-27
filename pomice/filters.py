@@ -47,7 +47,7 @@ class Equalizer(Filter):
         return self._name
 
     def __repr__(self) -> str:
-        return f"<Pomice.EqualizerFilter eq={self.eq} raw={self.eq}>"
+        return f"<Pomice.EqualizerFilter eq={self._name} raw={self.eq}>"
 
     @classmethod
     def build(cls, *, levels: list, name: str = 'CustomEqualizer'):
