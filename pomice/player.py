@@ -75,24 +75,20 @@ class Player(VoiceProtocol):
     @property
     def position(self) -> float:
         """Property which returns the player's position in a track in milliseconds"""
-        current = self._current.original
-
-        if not self.is_playing or not self._current:
+        if not self.is_playing:
             return 0
+
+        current = self._current.original
 
         if self.is_paused:
             return min(self._last_position, current.length)
 
         difference = (time.time() * 1000) - self._last_update
         
-        if self._filters and [f for f in self._filters if isinstance(f, Timescale)]:
-            timescale = [f for f in self._filters if isinstance(f, Timescale)][0]
+        if (timescale := next((f for f in self._filters if isinstance(f, Timescale)), None)):
             difference = difference * timescale.speed * timescale.rate
 
         position = self._last_position + difference
-
-        if position > current.length:
-            return 0
 
         return min(position, current.length)
 
@@ -148,9 +144,8 @@ class Player(VoiceProtocol):
         """
         return self._guild.id not in self._node._players
 
-    async def _set_filter(self):
+    async def _set_filter(self, position: Union[float, None]):
         await self._node.send(op="filters", guildId=str(self.guild.id), **self._filter_payload)
-        position = self.position if self._current else None
         if position:
             await self._node.send(op="seek", guildId=str(self.guild.id), position=position)
 
@@ -315,12 +310,13 @@ class Player(VoiceProtocol):
 
     async def add_filter(self, filter: Filter) -> List[Filter]:
         """Adds a filter to the player. Takes a pomice.Filter object."""
+        position = self.position if self._current else None
         for f in self.filters:
             if type(f) == type(filter):
-                self.filters.remove(f)
+                self._filters.remove(f)
         self._filters.append(filter)
         self._filter_payload.update(filter.payload)
-        await self._set_filter()
+        await self._set_filter(position)
         return self._filters
 
     async def remove_filter(self, filter: Filter) -> Optional[Filter]:
@@ -330,15 +326,17 @@ class Player(VoiceProtocol):
                 filter = Equalizer.flat()
             else:
                 filter = filter()
+        position = self.position if self._current else None
         for f in self._filters:
             if isinstance(f, filter.__class__):
-                self.filters.remove(f)
+                self._filters.remove(f)
         filter = self._filter_payload.pop(list(filter.payload.keys())[0], None)
-        await self._set_filter()
+        await self._set_filter(position)
         return filter
 
     async def reset_filter(self) -> None:
         """Resets the current filter of the player."""
+        position = self.position if self._current else None
         self._filters = []
         self._filter_payload = {}
-        await self._set_filter()
+        await self._set_filter(position)
