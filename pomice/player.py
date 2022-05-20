@@ -168,17 +168,13 @@ class Player(VoiceProtocol):
         await self._dispatch_voice_update(self._voice_state)
 
     async def on_voice_state_update(self, data: dict):
-        self._voice_state.update({"sessionId": data.get("session_id")})
-
         if not (channel_id := data.get("channel_id")):
             await self.disconnect()
             self._voice_state.clear()
             return
 
+        self._voice_state.update({"sessionId": data.get("session_id")})
         self.channel = self.guild.get_channel(int(channel_id))
-
-        if data.get("token"):
-            await self._dispatch_voice_update({**self._voice_state, "event": data})
 
     async def _dispatch_event(self, data: dict):
         event_type = data.get("type")
