@@ -35,6 +35,7 @@ class Player(VoiceProtocol):
     def __call__(self, client: ClientType, channel: GuildVoiceChannel):
         self.client: ClientType = client
         self.channel: GuildVoiceChannel = channel
+        self._bot: ClientType = client
 
         return self
 
