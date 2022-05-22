@@ -35,6 +35,7 @@ class Player(VoiceProtocol):
     def __call__(self, client: ClientType, channel: GuildVoiceChannel):
         self.client: ClientType = client
         self.channel: GuildVoiceChannel = channel
+        self._guild: Guild = self.channel.guild
 
         return self
 
@@ -48,7 +49,6 @@ class Player(VoiceProtocol):
         self.client = client
         self._bot = client
         self.channel = channel
-        self._guild: Guild = self.channel.guild
 
         self._node = node or NodePool.get_node()
         self._current: Track = None
