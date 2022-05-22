@@ -36,6 +36,7 @@ class Player(VoiceProtocol):
         self.client: ClientType = client
         self.channel: GuildVoiceChannel = channel
         self._bot: ClientType = client
+        self._guild: Guild = channel.guild
 
         return self
 
@@ -49,6 +50,7 @@ class Player(VoiceProtocol):
         self.client = client
         self._bot = client
         self.channel = channel
+        self._guild: Guild = channel.guild if channel else None
 
         self._node = node or NodePool.get_node()
         self._current: Track = None
@@ -120,7 +122,7 @@ class Player(VoiceProtocol):
     @property
     def guild(self) -> Guild:
         """Property which returns the guild associated with the player"""
-        return self.channel.guild
+        return self._guild
 
     @property
     def volume(self) -> int:
