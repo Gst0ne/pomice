@@ -306,31 +306,32 @@ class Player(VoiceProtocol):
         self._volume = volume
         return self._volume
 
-    async def add_filter(self, filter: Filter) -> List[Filter]:
+    async def add_filter(self, filter_: Filter, /) -> List[Filter]:
         """Adds a filter to the player. Takes a pomice.Filter object."""
         position = self.position if self._current else None
         for f in self.filters:
-            if type(f) == type(filter):
+            if type(f) == type(filter_):
                 self._filters.remove(f)
-        self._filters.append(filter)
-        self._filter_payload.update(filter.payload)
+        self._filters.append(filter_)
+        self._filter_payload.update(filter_.payload)
         await self._set_filter(position)
         return self._filters
 
-    async def remove_filter(self, filter: Filter) -> Optional[Filter]:
+    async def remove_filter(self, filter_: Filter) -> Optional[Filter]:
         """Removes an existing filter from the player"""
-        if isinstance(filter, type) or inspect.ismethod(filter):
-            if Equalizer in (filter, getattr(filter, "__self__", None)):
-                filter = Equalizer.flat()
+        if isinstance(filter_, type) or inspect.ismethod(filter_):
+            if Equalizer in (filter_, getattr(filter_, "__self__", None)):
+                filter_ = Equalizer.flat()
             else:
-                filter = filter()
+                filter_ = filter()
         position = self.position if self._current else None
         for f in self._filters:
-            if isinstance(f, filter.__class__):
+            if isinstance(f, filter_.__class__):
                 self._filters.remove(f)
-        filter = self._filter_payload.pop(list(filter.payload.keys())[0], None)
-        await self._set_filter(position)
-        return filter
+        filter_ = self._filter_payload.pop(next(iter(filter_.payload.keys())), None)
+        if filter_:
+            await self._set_filter(position)
+        return filter_
 
     async def reset_filter(self) -> None:
         """Resets the current filter of the player."""
