@@ -323,7 +323,7 @@ class Player(VoiceProtocol):
             if Equalizer in (filter_, getattr(filter_, "__self__", None)):
                 filter_ = Equalizer.flat()
             else:
-                filter_ = filter()
+                filter_ = filter_()
         position = self.position if self._current else None
         for i, f in enumerate(self._filters):
             if isinstance(f, filter_.__class__):
