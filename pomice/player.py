@@ -317,7 +317,7 @@ class Player(VoiceProtocol):
         await self._set_filter(position)
         return self._filters
 
-    async def remove_filter(self, filter_: Filter) -> Optional[Filter]:
+    async def remove_filter(self, filter_: Filter, /) -> Optional[Filter]:
         """Removes an existing filter from the player"""
         if isinstance(filter_, type) or inspect.ismethod(filter_):
             if Equalizer in (filter_, getattr(filter_, "__self__", None)):
@@ -325,11 +325,10 @@ class Player(VoiceProtocol):
             else:
                 filter_ = filter()
         position = self.position if self._current else None
-        for f in self._filters:
+        for i, f in enumerate(self._filters):
             if isinstance(f, filter_.__class__):
-                self._filters.remove(f)
-        filter_ = self._filter_payload.pop(next(iter(filter_.payload.keys())), None)
-        if filter_:
+                filter_ = self._filters.pop(i)
+        if self._filter_payload.pop(next(iter(filter_.payload.keys())), None):
             await self._set_filter(position)
         return filter_
 
