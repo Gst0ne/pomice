@@ -116,7 +116,6 @@ class Client:
                     Track(track["track"])
                     for track in next_data["items"] if track["track"] is not None
                 ]
-
                 next_page_url = next_data["next"]
 
             return Playlist(data, tracks)
