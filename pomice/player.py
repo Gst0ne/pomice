@@ -330,7 +330,7 @@ class Player(VoiceProtocol):
                 filter_ = self._filters.pop(i)
         if self._filter_payload.pop(next(iter(filter_.payload.keys())), None):
             await self._set_filter(position)
-        return filter_
+            return filter_
 
     async def reset_filter(self) -> None:
         """Resets the current filter of the player."""
