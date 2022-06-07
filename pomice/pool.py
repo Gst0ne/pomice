@@ -181,31 +181,6 @@ class Node:
             return False
         return True if self._websocket._response.headers.get("Session-Resumed") == "true" else False
 
-    async def _update_handler(self, data: dict):
-        await self._bot.wait_until_ready()
-
-        if not data:
-            return
-
-        if data["t"] == "VOICE_SERVER_UPDATE":
-            guild_id = int(data["d"]["guild_id"])
-            try:
-                player = self._players[guild_id]
-                await player.on_voice_server_update(data["d"])
-            except KeyError:
-                return
-
-        elif data["t"] == "VOICE_STATE_UPDATE":
-            if int(data["d"]["user_id"]) != self._bot.user.id:
-                return
-
-            guild_id = int(data["d"]["guild_id"])
-            try:
-                player = self._players[guild_id]
-                await player.on_voice_state_update(data["d"])
-            except KeyError:
-                return
-
     async def _listen(self):
         backoff = Backoff(base=1, maximum_time=60, maximum_tries=None)
 
@@ -220,7 +195,7 @@ class Node:
                     await self.connect()
 
             else:
-                self._bot.loop.create_task(self._handle_payload(msg.json()))
+                asyncio.create_task(self._handle_payload(msg.json()))
 
 
     async def _handle_payload(self, data: dict):
@@ -261,14 +236,14 @@ class Node:
                 self._websocket_uri, headers=self._headers, heartbeat=self._heartbeat
             )
             if self._task is None:
-                self._task = self._bot.loop.create_task(self._listen())
+                self._task = asyncio.create_task(self._listen())
                 self._bot.dispatch("pomice_node_ready", self)
-            self._available = True
 
             if self._resume_key:
                 await self.send(op='configureResuming', key=self._resume_key, timeout=60)
                 self._resuming_configured = True
 
+            self._available = True
             return self
 
         except aiohttp.WSServerHandshakeError:
