@@ -236,12 +236,12 @@ class Node:
             if self._task is None:
                 self._task = asyncio.create_task(self._listen())
                 self._bot.dispatch("pomice_node_ready", self)
+            self._available = True
 
             if self._resume_key:
                 await self.send(op='configureResuming', key=self._resume_key, timeout=60)
                 self._resuming_configured = True
 
-            self._available = True
             return self
 
         except aiohttp.WSServerHandshakeError:
