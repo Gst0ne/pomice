@@ -91,7 +91,7 @@ class Node:
         self._session: aiohttp.ClientSession = session or aiohttp.ClientSession()
         self._websocket: aiohttp.ClientWebSocketResponse = None
         self._task: asyncio.Task = None
-        self._closed_msgtypes: Tuple[WSMsgType] = (WSMsgType.CLOSED, WSMsgType.CLOSING)
+        self._closed_msgtypes: Tuple[WSMsgType, ...] = (WSMsgType.CLOSED, WSMsgType.CLOSING)
 
         self._connection_id = None
         self._metadata = None
