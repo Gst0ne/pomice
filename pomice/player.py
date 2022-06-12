@@ -146,7 +146,7 @@ class Player(VoiceProtocol):
         """
         return self._guild.id not in self._node._players
 
-    async def _set_filter(self, position: Union[float, None]):
+    async def _set_filter(self, position: Optional[float]=None):
         await self._node.send(op="filters", guildId=str(self.guild.id), **self._filter_payload)
         if position:
             await self._node.send(op="seek", guildId=str(self.guild.id), position=position)
