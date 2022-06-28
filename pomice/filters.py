@@ -73,6 +73,13 @@ class Equalizer(Filter):
         return cls(levels=levels, name='Flat')
 
     @classmethod
+    def bass(cls):
+        """Bass Equalizer"""
+        levels = [(0, 0.2), (1, 0.15), (2, 0.1), (3, 0.05), (4, 0.0),
+                  (5, -0.05), (6, -0.1), (7, -0.1), (8, -0.1), (9, -0.1),
+                  (10, -0.1), (11, -0.1), (12, -0.1), (13, -0.1), (14, -0.1)]
+
+    @classmethod
     def boost(cls):
         """Boost Equalizer.
         This equalizer emphasizes Punchy Bass and Crisp Mid-High tones.
