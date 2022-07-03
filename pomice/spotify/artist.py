@@ -8,9 +8,9 @@ class Artist:
         self.name = f"Top Tracks by {artist['name']}"
         self.artists = artist["name"]
         self.tracks = [Track(track) for track in data["tracks"]]
-        self.total_tracks = len(data["tracks"]) if data["tracks"] and len(data["tracks"]) else 0
+        self.total_tracks = len(data["tracks"])
         self.id = artist["id"]
-        if artist.get("images") and len(artist["images"]):
+        if artist.get("images"):
             self.image = artist["images"][-1]["url"]
         else:
             self.image = None
