@@ -257,7 +257,7 @@ class Player(VoiceProtocol):
         if track.spotify: 
             try:
                 search = await self._node.get_tracks(track.isrc, ctx=track.ctx)
-            except Exception as e:
+            except:
                 search = await self._node.get_tracks(f"{track.title} - {track.author}", ctx=track.ctx)
             search: Track = search[0]
             track.original = search
