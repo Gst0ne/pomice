@@ -7,23 +7,9 @@ class Track:
         self.artists = ", ".join(artist["name"] for artist in data["artists"])
         self.length = data["duration_ms"]
         self.id = data["id"]
-
-        if data.get("album") and data["album"].get("images"):
-            self.image = data["album"]["images"][0]["url"]
-        else:
-            self.image = None
-
-        if data["is_local"]:
-            self.uri = None
-        else:
-            self.uri = data["external_urls"]["spotify"]
-
-    @property
-    def isrc(self):
-        try:
-            return self.data["external_ids"]["isrc"]
-        except KeyError:
-            return None
+        self.image = data["album"]["images"][0]["url"] if data.get("album") and data["album"]["images"] else None
+        self.uri = None if data["is_local"] else data["external_urls"]["spotify"]
+        self.isrc = self.data["external_ids"].get("isrc")
 
     def __repr__(self) -> str:
         return (
