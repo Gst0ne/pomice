@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Any
 from .track import Track
 
 class TopTracks:
