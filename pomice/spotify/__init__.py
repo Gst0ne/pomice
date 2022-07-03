@@ -4,5 +4,5 @@ from .exceptions import InvalidSpotifyURL, SpotifyRequestException
 from .track import Track
 from .playlist import Playlist
 from .album import Album
-from .artist import Artist
+from .toptracks import TopTracks
 from .client import Client
