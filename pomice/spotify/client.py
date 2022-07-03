@@ -4,16 +4,14 @@ from base64 import b64encode
 
 import aiohttp
 
-from .artist import Artist
+from .toptracks import TopTracks
 from .album import Album
 from .exceptions import InvalidSpotifyURL, SpotifyRequestException
 from .playlist import Playlist
 from .track import Track
 
 GRANT_URL = "https://accounts.spotify.com/api/token"
-ARTIST_URL = "https://api.spotify.com/v1/artists/{id}"
 REQUEST_URL = "https://api.spotify.com/v1/{type}s/{id}"
-TOP_TRCKS_URL = "https://api.spotify.com/v1/artists/{id}/top-tracks?market=ES"
 SPOTIFY_URL_REGEX = re.compile(
     r"https?://open.spotify.com/(?P<type>album|artist|playlist|track)/(?P<id>[a-zA-Z0-9]+)"
 )
@@ -57,14 +55,15 @@ class Client:
             await self._fetch_bearer_token()
 
         result = SPOTIFY_URL_REGEX.match(query)
-        spotify_type = result.group("type")
-        spotify_id = result.group("id")
 
         if not result:
             raise InvalidSpotifyURL("The Spotify link provided is not valid.")
 
+        spotify_type = result.group("type")
+        spotify_id = result.group("id")
+
         if spotify_type == "artist": 
-            request_url = TOP_TRCKS_URL.format(id=spotify_id)
+            request_url = f"{REQUEST_URL.format(type=spotify_type, id=spotify_id)}/top-tracks?market=US"
         else:
             request_url = REQUEST_URL.format(type=spotify_type, id=spotify_id)
 
@@ -83,11 +82,12 @@ class Client:
             return Album(data)
 
         elif spotify_type == "artist":
-
-            top_tracks = Artist(data, (await self.get_spoify_artist(spotify_id)))
+            tracks = data["tracks"]
+            artist_data = next(artist for artist in tracks[0]["artists"] if artist["id"] == spotify_id)
+            top_tracks = TopTracks(artist, data["tracks"])
 
             if not top_tracks.total_tracks:
-                raise SpotifyRequestException("This artist has no popular tracks and therefore cannot be queued.")
+                raise SpotifyRequestException("This artist has no popular tracks.")
             
             return top_tracks
 
@@ -99,7 +99,7 @@ class Client:
             ]
 
             if not tracks:
-                raise SpotifyRequestException("This playlist is empty and therefore cannot be queued.")
+                raise SpotifyRequestException("This playlist is empty.")
             
             next_page_url = data["tracks"]["next"]
 
@@ -119,19 +119,3 @@ class Client:
                 next_page_url = next_data["next"]
 
             return Playlist(data, tracks)
-
-    async def get_spoify_artist(self, id: str):
-        if not self._bearer_token or time.time() >= self._expiry:
-            await self._fetch_bearer_token()
-
-        request_url = ARTIST_URL.format(id=id)
-
-        async with self.session.get(request_url, headers=self._bearer_headers) as resp:
-            if resp.status != 200:
-                raise SpotifyRequestException(
-                    f"Error while fetching artist: {resp.status} {resp.reason}"
-                )
-
-            artist: dict = await resp.json()
-
-            return artist
