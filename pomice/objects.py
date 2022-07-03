@@ -37,6 +37,7 @@ class Track:
         self.is_stream = info.get("isStream")
         self.is_seekable = info.get("isSeekable")
         self.position = info.get("position")
+        self.isrc = info.get("isrc")
 
     def __eq__(self, other):
         if not isinstance(other, Track):
