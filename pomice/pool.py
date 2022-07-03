@@ -339,7 +339,8 @@ class Node:
                             "sourceName": None,
                             "title": spotify_results.name,
                             "uri": spotify_results.uri, 
-                            "thumbnail": spotify_results.image
+                            "thumbnail": spotify_results.image,
+                            "isrc": spotify_results.isrc
                         }
                     )
                ]
@@ -359,7 +360,8 @@ class Node:
                         "sourceName": None,
                         "title": track.name,
                         "uri": track.uri, 
-                        "thumbnail": track.image
+                        "thumbnail": track.image,
+                        "isrc": track.isrc
                     }
                 ) for track in spotify_results.tracks
             ]
