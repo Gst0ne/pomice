@@ -84,7 +84,7 @@ class Client:
         elif spotify_type == "artist":
             tracks = data["tracks"]
             artist_data = next(artist for artist in tracks[0]["artists"] if artist["id"] == spotify_id)
-            top_tracks = TopTracks(artist, data["tracks"])
+            top_tracks = TopTracks(artist_data, data["tracks"])
 
             if not top_tracks.total_tracks:
                 raise SpotifyRequestException("This artist has no popular tracks.")
