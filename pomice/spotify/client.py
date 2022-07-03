@@ -62,10 +62,7 @@ class Client:
         spotify_type = result.group("type")
         spotify_id = result.group("id")
 
-        if spotify_type == "artist": 
-            request_url = f"{REQUEST_URL.format(type=spotify_type, id=spotify_id)}/top-tracks?market=US"
-        else:
-            request_url = REQUEST_URL.format(type=spotify_type, id=spotify_id)
+        request_url = REQUEST_URL.format(type=spotify_type, id=spotify_id)
 
         async with self.session.get(request_url, headers=self._bearer_headers) as resp:
             if resp.status != 200:
@@ -82,9 +79,16 @@ class Client:
             return Album(data)
 
         elif spotify_type == "artist":
-            tracks = data["tracks"]
-            artist_data = next(artist for artist in tracks[0]["artists"] if artist["id"] == spotify_id)
-            top_tracks = TopTracks(artist_data, data["tracks"])
+            async with self.session.get(f"{request_url}/top-tracks?market=US", headers=self._bearer_headers) as resp:
+                if resp.status != 200:
+                    raise SpotifyRequestException(
+                        f"Error while fetching results: {resp.status} {resp.reason}"
+                    )
+
+                track_data: dict = await resp.json()
+
+            tracks = track_data["tracks"]
+            top_tracks = TopTracks(data, tracks)
 
             if not top_tracks.total_tracks:
                 raise SpotifyRequestException("This artist has no popular tracks.")
