@@ -45,7 +45,8 @@ class Player(VoiceProtocol):
         client: ClientType = None, 
         channel: GuildVoiceChannel = None, 
         *, 
-        node: Node = None
+        node: Optional[Node] = None,
+        default_volume: int = 100
     ):
         self.client = client
         self._bot = client
@@ -54,7 +55,7 @@ class Player(VoiceProtocol):
 
         self._node = node or NodePool.get_node()
         self._current: Track = None
-        self._volume = 100
+        self._volume = default_volume
         self._paused = False
         self._is_connected = False
 
@@ -262,21 +263,14 @@ class Player(VoiceProtocol):
             search: Track = search[0]
             track.original = search
 
-            data = {
-                "op": "play",
-                "guildId": str(self.guild.id),
-                "track": search.track_id,
-                "startTime": str(start),
-                "noReplace": ignore_if_playing
-            }
-        else:
-            data = {
-                "op": "play",
-                "guildId": str(self.guild.id),
-                "track": track.track_id,
-                "startTime": str(start),
-                "noReplace": ignore_if_playing
-            }
+        data = {
+            "op": "play",
+            "guildId": str(self.guild.id),
+            "track": search.track_id if track.spotify else track.track_id,
+            "startTime": str(start),
+            "volume": str(self._volume),
+            "noReplace": ignore_if_playing
+        }
 
         if end > 0:
             data["endTime"] = str(end)
