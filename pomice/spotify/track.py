@@ -8,7 +8,7 @@ class Track:
         self.id = data["id"]
         self.image = data["album"]["images"][0]["url"] if data.get("album") and data["album"]["images"] else None
         self.uri = None if data["is_local"] else data["external_urls"]["spotify"]
-        self.isrc = data["external_ids"].get("isrc")
+        self.isrc = data["external_ids"].get("isrc") if data.get("external_ids") else None
 
     def __repr__(self) -> str:
         return (
