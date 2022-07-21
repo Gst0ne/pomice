@@ -255,7 +255,7 @@ class Player(VoiceProtocol):
         ignore_if_playing: bool = False
     ) -> Track:
         """Plays a track. If a Spotify track is passed in, it will be handled accordingly."""
-        if track.spotify: 
+        if track.original is None: 
             try:
                 search = await self._node.get_tracks(track.isrc, ctx=track.ctx)
             except:
