@@ -266,7 +266,7 @@ class Player(VoiceProtocol):
         data = {
             "op": "play",
             "guildId": str(self.guild.id),
-            "track": search.track_id if track.spotify else track.track_id,
+            "track": search.track_id if track.original is None else track.track_id,
             "startTime": str(start),
             "volume": str(self._volume),
             "noReplace": ignore_if_playing
