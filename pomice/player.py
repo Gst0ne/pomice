@@ -147,10 +147,8 @@ class Player(VoiceProtocol):
         """
         return self._guild.id not in self._node._players
 
-    async def _set_filter(self, position: Optional[float]=None):
+    async def _set_filter(self):
         await self._node.send(op="filters", guildId=str(self.guild.id), **self._filter_payload)
-        if position:
-            await self._node.send(op="seek", guildId=str(self.guild.id), position=position)
 
     async def _update_state(self, data: dict):
         state: dict = data.get("state")
@@ -281,8 +279,8 @@ class Player(VoiceProtocol):
         return self._current
 
     async def seek(self, position: float) -> float:
-        """Seeks to a position in the currently playing track milliseconds"""
-        if position is None or position < 0 or position > self._current.original.length:
+        """Seeks to a position in the currently playing track in milliseconds"""
+        if position < 0 or position > self._current.original.length:
             raise TrackInvalidPosition(f"Seek position must be between 0 and the track length")
 
         await self._node.send(op="seek", guildId=str(self.guild.id), position=position)
@@ -302,13 +300,12 @@ class Player(VoiceProtocol):
 
     async def add_filter(self, filter_: Filter, /) -> List[Filter]:
         """Adds a filter to the player. Takes a pomice.Filter object."""
-        position = self.position if self._current else None
         for f in self.filters:
             if type(f) == type(filter_):
                 self._filters.remove(f)
         self._filters.append(filter_)
         self._filter_payload.update(filter_.payload)
-        await self._set_filter(position)
+        await self._set_filter()
         return self._filters
 
     async def remove_filter(self, filter_: Filter, /) -> Optional[Filter]:
@@ -318,17 +315,15 @@ class Player(VoiceProtocol):
                 filter_ = Equalizer.flat()
             else:
                 filter_ = filter_()
-        position = self.position if self._current else None
         for i, f in enumerate(self._filters):
             if isinstance(f, filter_.__class__):
                 filter_ = self._filters.pop(i)
         if self._filter_payload.pop(next(iter(filter_.payload.keys())), None):
-            await self._set_filter(position)
+            await self._set_filter()
             return filter_
 
     async def reset_filter(self) -> None:
         """Resets the current filter of the player."""
-        position = self.position if self._current else None
         self._filters = []
         self._filter_payload = {}
-        await self._set_filter(position)
+        await self._set_filter()
