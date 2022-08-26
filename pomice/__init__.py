@@ -1,7 +1,7 @@
 """Pomice wrapper for Lavalink, made possible by cloudwithax 2021"""
 import discord
 
-if not discord.__version__.startswith("2.0"):
+if not discord.__version__.startswith("2."):
     class DiscordPyOutdated(Exception):
         pass
 
